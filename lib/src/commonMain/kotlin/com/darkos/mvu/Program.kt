@@ -13,7 +13,7 @@ class Program<T : MVUState>(
     private val component: Component<T>,
     initialState: T
 ) {
-    private val msgQueue = ArrayDeque<Message>()
+    private val messages = Channel<Message>()
 
     inner class EffectJobPool{
         private var jobs: List<Job> = emptyList()
@@ -47,83 +47,51 @@ class Program<T : MVUState>(
     }
 
     private val effectJobPool = EffectJobPool()
+    private val acceptJob: Job = SupervisorJob()
+    private val scope = CoroutineScope(Dispatchers.Default + acceptJob)
 
-    private val channel = Channel<StateMessageData<T>>()
     private var state: T = initialState
 
     init {
         component.render(initialState)
     }
 
-    private fun loop() {
-        if (msgQueue.isNotEmpty()) {
-            processMessage()
-        }
-    }
-
-    private fun processMessage() {
-        StateMessageData(
-            state = state,
-            message = msgQueue.first()
-        ).let {
-            CoroutineScope(Dispatchers.Main.immediate).launch {
-                channel.send(it)
-            }
-        }
-    }
-
     private val job = CoroutineScope(Dispatchers.Main.immediate).launch {
-        channel.consumeAsFlow().collect {
-            component.render(it.state)
-
-            state = it.state
-
-            msgQueue.let { messages ->
-                if (messages.isNotEmpty()) {
-                    messages.removeFirst()
-                }
-            }
-
-            reducer.update(it.state, it.message).takeIf {
-                it.effect !is None
+        messages.consumeAsFlow().collect {
+            reducer.update(state, it).also {
+                state = it.state
+            }.also {
+                component.render(state)
+            }.effect.takeIf {
+                it !is None
             }?.let {
                 runEffect(it)
             }
         }
     }
 
-    private fun runEffect(stateCmdData: StateCmdData<T>) {
+    private fun runEffect(effect: Effect) {
         CoroutineScope(Background).launch {
-            when (val effect = stateCmdData.effect) {
+            when (effect) {
                 is FlowEffect -> {
                     effectHandler.call(effect).collect {
-                        processMessage(it)
+                        accept(it)
                         if (it.isFinal) {
                             cancel()
                         }
                     }
                 }
                 else -> {
-                    processMessage(effectHandler.call(effect))
+                    accept(effectHandler.call(effect))
                 }
             }
         }.let { job ->
-            stateCmdData.effect.let {
-                if (it is ScopedEffect) {
-                    effectJobPool.addScoped(it.scope, job)
-                } else {
-                    effectJobPool.add(job)
-                }
+            if (effect is ScopedEffect) {
+                effectJobPool.addScoped(effect.scope, job)
+            } else {
+                effectJobPool.add(job)
             }
         }
-    }
-
-    private fun processMessage(message: Message) {
-        when (message) {
-            is Idle -> Unit
-            else -> msgQueue.addLast(message)
-        }
-        loop()
     }
 
     fun start() {
@@ -133,14 +101,13 @@ class Program<T : MVUState>(
     fun clear() {
         effectJobPool.clear()
         job.cancel()
-        channel.cancel()
-        msgQueue.clear()
+        messages.cancel()
+        acceptJob.cancel()
     }
 
     fun accept(message: Message) {
-        msgQueue.addLast(message)
-        if (msgQueue.isNotEmpty()) {
-            processMessage()
+        scope.launch {
+            messages.send(message)
         }
     }
 }
