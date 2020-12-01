@@ -12,7 +12,7 @@ val repository = "MVU"
 
 val artifactName = "program"
 val artifactGroup = "com.$organization.$repository"
-val artifactVersion = "0.0.1"
+val artifactVersion = "0.0.2"
 
 group = artifactGroup
 version = artifactVersion
@@ -107,6 +107,30 @@ bintray {
             name = artifactVersion
             released = Date().toString()
             vcsTag = artifactVersion
+        }
+    }
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("metadata"){
+            artifactId = artifactName
+            groupId = artifactGroup
+
+            from(components.getByName("kotlin"))
+
+            pom {
+                name.set("program")
+                description.set("description")
+                url.set("https://github.com/Darkos-den/mvu-program")
+                licenses {
+                    license {
+                        name.set("The Apache License, Version 2.0")
+                        url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                    }
+                }
+
+            }
         }
     }
 }
