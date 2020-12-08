@@ -10,5 +10,5 @@ rootProject.name = "mvu-program"
 
 enableFeaturePreview("GRADLE_METADATA")
 
-include(":lib")
+include(":program")
 

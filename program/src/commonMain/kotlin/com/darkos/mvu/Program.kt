@@ -15,7 +15,7 @@ class Program<T : MVUState>(
 ) {
     private val messages = Channel<Message>()
 
-    inner class EffectJobPool{
+    private inner class EffectJobPool{
         private var jobs: List<Job> = emptyList()
         private var scopedJobs: HashMap<Any, Job> = hashMapOf()
 
