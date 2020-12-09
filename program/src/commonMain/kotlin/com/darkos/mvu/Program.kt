@@ -1,6 +1,7 @@
 package com.darkos.mvu
 
 import com.darkos.mvu.model.*
+import com.darkos.mvu.model.flow.FinalMessage
 import com.darkos.mvu.model.flow.FlowEffect
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
@@ -74,9 +75,9 @@ class Program<T : MVUState>(
         CoroutineScope(Background).launch {
             when (effect) {
                 is FlowEffect -> {
-                    effectHandler.call(effect).collect {
+                    effectHandler.callAsFlow(effect).collect {
                         accept(it)
-                        if (it.isFinal) {
+                        if (it is FinalMessage) {
                             cancel()
                         }
                     }

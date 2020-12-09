@@ -11,7 +11,7 @@ val repository = "MVU"
 
 val artifactName = "program"
 val artifactGroup = "com.$organization.$repository"
-val artifactVersion = "0.0.4"
+val artifactVersion = "0.0.5"
 
 group = artifactGroup
 version = artifactVersion
@@ -59,7 +59,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2")
-                implementation("com.darkosinc.MVU:core:0.0.9")
+                implementation("com.darkosinc.MVU:core:0.1.0")
             }
         }
         val androidMain by getting
