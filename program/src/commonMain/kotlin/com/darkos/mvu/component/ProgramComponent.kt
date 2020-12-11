@@ -7,4 +7,5 @@ interface ProgramComponent<T : MVUState> {
     fun applyStateListener(block: (T) -> Unit)
     fun clearStateListener()
     fun start()
+    fun clear()
 }

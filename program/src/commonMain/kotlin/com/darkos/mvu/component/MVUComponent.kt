@@ -15,9 +15,7 @@ abstract class MVUComponent<T : MVUState>(
 ) : Component<T>, ProgramComponent<T> {
 
     private var processState: ((T) -> Unit)? = null
-
     private var isStarted = false
-
     private val program: Program<T> by lazy {
         Program(
             initialState = createInitialState(),
@@ -48,9 +46,9 @@ abstract class MVUComponent<T : MVUState>(
         processState = null
     }
 
-    fun clear() {
+    override fun clear() {
+        clearStateListener()
         program.clear()
-        processState = null
     }
 
     fun accept(message: Message) {
