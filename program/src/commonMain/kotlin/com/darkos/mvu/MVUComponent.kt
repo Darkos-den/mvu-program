@@ -16,6 +16,8 @@ abstract class MVUComponent<T : MVUState>(
 
     var processState: ((T)->Unit)? = null
 
+    private var isStarted = false
+
     private val program: Program<T> by lazy {
         Program(
             initialState = createInitialState(),
@@ -32,7 +34,10 @@ abstract class MVUComponent<T : MVUState>(
     }
 
     fun start() {
-        program.start()
+        if(isStarted.not()){
+            isStarted = true
+            program.start()
+        }
     }
 
     fun clear() {

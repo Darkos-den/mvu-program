@@ -49,28 +49,11 @@ class Program<T : MVUState>(
 
     private val effectJobPool = EffectJobPool()
     private val acceptJob: Job = SupervisorJob()
-    private val scope = CoroutineScope(Dispatchers.Default + acceptJob)
 
     private var state: T = initialState
 
     init {
         component.render(initialState)
-    }
-
-    private val job = CoroutineScope(Background).launch {
-        messages.consumeAsFlow().collect {
-            reducer.update(state, it).also {
-                state = it.state
-            }.also {
-                withContext(Dispatchers.Main){
-                    component.render(state)
-                }
-            }.effect.takeIf {
-                it !is None
-            }?.let {
-                runEffect(it)
-            }
-        }
     }
 
     private fun runEffect(effect: Effect) {
@@ -103,14 +86,19 @@ class Program<T : MVUState>(
 
     fun clear() {
         effectJobPool.clear()
-        job.cancel()
         messages.cancel()
         acceptJob.cancel()
     }
 
     fun accept(message: Message) {
-        scope.launch {
-            messages.send(message)
+        reducer.update(state, message).also {
+            state = it.state
+        }.also {
+            component.render(state)
+        }.effect.takeIf {
+            it !is None
+        }?.let {
+            runEffect(it)
         }
     }
 }
