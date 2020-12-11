@@ -44,6 +44,10 @@ abstract class MVUComponent<T : MVUState>(
         processState = block
     }
 
+    override fun clearStateListener() {
+        processState = null
+    }
+
     fun clear() {
         program.clear()
         processState = null
