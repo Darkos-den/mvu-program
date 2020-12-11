@@ -60,16 +60,14 @@ class Program<T : MVUState>(
             when (val effect = this@run) {
                 is FlowEffect -> {
                     effectHandler.callAsFlow(effect).collect {
-                        accept(it)
+                        acceptAsync(it)
                         if (it is FinalMessage) {
                             cancel()
                         }
                     }
                 }
                 else -> {
-                    withContext(Dispatchers.Main) {
-                        accept(effectHandler.call(effect))
-                    }
+                    acceptAsync(effectHandler.call(effect))
                 }
             }
         }
@@ -85,6 +83,12 @@ class Program<T : MVUState>(
     }
 
     fun accept(message: Message) {
+        synchronized(sync) {
+            runReducerProcessing(message)
+        }
+    }
+
+    suspend fun acceptAsync(message: Message) = withContext(Dispatchers.Main) {
         synchronized(sync) {
             runReducerProcessing(message)
         }
