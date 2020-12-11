@@ -57,12 +57,14 @@ class Program<T : MVUState>(
         component.render(initialState)
     }
 
-    private val job = CoroutineScope(Dispatchers.Main.immediate).launch {
+    private val job = CoroutineScope(Background).launch {
         messages.consumeAsFlow().collect {
             reducer.update(state, it).also {
                 state = it.state
             }.also {
-                component.render(state)
+                withContext(Dispatchers.Main){
+                    component.render(state)
+                }
             }.effect.takeIf {
                 it !is None
             }?.let {
