@@ -2,13 +2,9 @@ package com.darkos.mvu
 
 import com.darkos.mvu.model.MVUState
 import com.darkos.mvu.model.Message
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.InternalCoroutinesApi
 
+@InternalCoroutinesApi
 abstract class MVUComponent<T : MVUState>(
     private val effectHandler: EffectHandler,
     private val reducer: Reducer<T>
