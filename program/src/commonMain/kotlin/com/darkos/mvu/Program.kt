@@ -7,6 +7,8 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.internal.SynchronizedObject
 import kotlinx.coroutines.internal.synchronized
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 @InternalCoroutinesApi
 class Program<T : MVUState>(
@@ -39,7 +41,7 @@ class Program<T : MVUState>(
 
     private var state: T = initialState
 
-    private val sync = SynchronizedObject()
+    private val mutex = Mutex()
 
     init {
         component.render(initialState)
@@ -83,13 +85,14 @@ class Program<T : MVUState>(
     }
 
     fun accept(message: Message) {
-        synchronized(sync) {
+        synchronized(message) {
             runReducerProcessing(message)
         }
+        mutex.free
     }
 
-    suspend fun acceptAsync(message: Message) = withContext(Dispatchers.Main) {
-        synchronized(sync) {
+    private suspend fun acceptAsync(message: Message) = withContext(Dispatchers.Main) {
+        mutex.withLock {
             runReducerProcessing(message)
         }
     }
