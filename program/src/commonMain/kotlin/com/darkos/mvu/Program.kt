@@ -1,14 +1,12 @@
 package com.darkos.mvu
 
+import com.badoo.reaktive.utils.lock.Lock
+import com.badoo.reaktive.utils.lock.synchronized
 import com.darkos.mvu.model.*
 import com.darkos.mvu.model.flow.FinalMessage
 import com.darkos.mvu.model.flow.FlowEffect
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.internal.SynchronizedObject
-import kotlinx.coroutines.internal.synchronized
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 
 @InternalCoroutinesApi
 class Program<T : MVUState>(
@@ -19,6 +17,7 @@ class Program<T : MVUState>(
 ) {
     private val jobs = SupervisorJob()
     private val scope = CoroutineScope(Background + jobs)
+    private val lock = Lock()
 
     private inner class EffectJobPool {
         private var scopedJobs: HashMap<Any, Job> = hashMapOf()
@@ -40,8 +39,6 @@ class Program<T : MVUState>(
     private val effectJobPool = EffectJobPool()
 
     private var state: T = initialState
-
-    private val mutex = Mutex()
 
     init {
         component.render(initialState)
@@ -85,14 +82,13 @@ class Program<T : MVUState>(
     }
 
     fun accept(message: Message) {
-        synchronized(message) {
+        lock.synchronized {
             runReducerProcessing(message)
         }
-        mutex.free
     }
 
     private suspend fun acceptAsync(message: Message) = withContext(Dispatchers.Main) {
-        mutex.withLock {
+        lock.synchronized {
             runReducerProcessing(message)
         }
     }
