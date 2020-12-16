@@ -11,7 +11,7 @@ val repository = "MVU"
 
 val artifactName = "program"
 val artifactGroup = "com.$organization.$repository"
-val artifactVersion = "0.2.5"
+val artifactVersion = "0.2.6"
 
 group = artifactGroup
 version = artifactVersion
@@ -60,7 +60,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation("com.badoo.reaktive:utils:1.1.18")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2-native-mt")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2")
                 implementation("com.darkosinc.MVU:core:0.1.0")
             }
         }

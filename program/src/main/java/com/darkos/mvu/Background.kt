@@ -7,6 +7,5 @@ import kotlinx.coroutines.runBlocking
 actual val Background: CoroutineDispatcher
     get() = Dispatchers.IO
 
-fun x(){
-    runBlocking {  }
-}
+actual val Ui: CoroutineDispatcher
+    get() = Dispatchers.Main

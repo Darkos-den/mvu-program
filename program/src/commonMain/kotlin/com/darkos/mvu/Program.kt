@@ -87,9 +87,11 @@ class Program<T : MVUState>(
         }
     }
 
-    private suspend fun acceptAsync(message: Message) = withContext(Dispatchers.Main) {
-        lock.synchronized {
-            runReducerProcessing(message)
+    private suspend fun acceptAsync(message: Message){
+        withContext(Ui) {
+            lock.synchronized {
+                runReducerProcessing(message)
+            }
         }
     }
 

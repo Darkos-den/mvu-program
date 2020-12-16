@@ -5,12 +5,13 @@ import platform.darwin.*
 import kotlin.coroutines.CoroutineContext
 
 actual val Background: CoroutineDispatcher
-    get() = NsQueueDispatcher(dispatch_get_main_queue())
+    get() = NsQueueDispatcher()
+
+actual val Ui: CoroutineDispatcher
+    get() = NsQueueDispatcher()
 
 @OptIn(InternalCoroutinesApi::class)
-internal class NsQueueDispatcher(
-    private val dispatchQueue: dispatch_queue_t
-) : CoroutineDispatcher(), Delay {
+internal class NsQueueDispatcher : CoroutineDispatcher(), Delay {
     private val mQueue = dispatch_get_main_queue()
 
     override fun dispatch(context: CoroutineContext, block: Runnable) {
