@@ -1,7 +1,5 @@
 package com.darkos.mvu
 
-import com.badoo.reaktive.utils.lock.Lock
-import com.badoo.reaktive.utils.lock.synchronized
 import com.darkos.mvu.model.*
 import com.darkos.mvu.model.flow.FinalMessage
 import com.darkos.mvu.model.flow.FlowEffect
@@ -17,7 +15,6 @@ class Program<T : MVUState>(
 ) {
     private val jobs = SupervisorJob()
     private val scope = CoroutineScope(Background + jobs)
-    private val lock = Lock()
 
     private inner class EffectJobPool {
         private var scopedJobs: HashMap<Any, Job> = hashMapOf()
@@ -79,20 +76,15 @@ class Program<T : MVUState>(
     fun clear() {
         effectJobPool.clear()
         jobs.cancel()
-        lock.destroy()
     }
 
     fun accept(message: Message) {
-        lock.synchronized {
-            runReducerProcessing(message)
-        }
+        runReducerProcessing(message)
     }
 
     private suspend fun acceptAsync(message: Message){
         withContext(Ui) {
-            lock.synchronized {
-                runReducerProcessing(message)
-            }
+            runReducerProcessing(message)
         }
     }
 

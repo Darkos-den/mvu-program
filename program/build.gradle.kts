@@ -11,7 +11,7 @@ val repository = "MVU"
 
 val artifactName = "program"
 val artifactGroup = "com.$organization.$repository"
-val artifactVersion = "0.2.7"
+val artifactVersion = "0.2.8"
 
 group = artifactGroup
 version = artifactVersion
@@ -23,7 +23,6 @@ repositories {
     jcenter()
     mavenCentral()
     maven(url = "https://dl.bintray.com/darkosinc/MVU")
-    maven(url = "https://dl.bintray.com/badoo/maven")
 }
 
 android {
@@ -59,7 +58,6 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation("com.badoo.reaktive:utils:1.1.18")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2")
                 implementation("com.darkosinc.MVU:core:0.1.0")
             }
