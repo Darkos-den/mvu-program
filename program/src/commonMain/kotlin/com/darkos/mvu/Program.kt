@@ -79,6 +79,7 @@ class Program<T : MVUState>(
     fun clear() {
         effectJobPool.clear()
         jobs.cancel()
+        lock.destroy()
     }
 
     fun accept(message: Message) {
