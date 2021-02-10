@@ -4,14 +4,23 @@ plugins {
     id("com.android.library")
     kotlin("multiplatform")
     `maven-publish`
+    id("com.jfrog.artifactory")
 }
 
-val organization = "darkosinc"
-val repository = "MVU"
+val organization = "darkos"
+val repository = "mvu"
 
 val artifactName = "program"
 val artifactGroup = "com.$organization.$repository"
-val artifactVersion = "0.2.8"
+val artifactVersion = "1.0.0-rc1"
+
+val repoName = "mvu-program"
+
+val localPropsFile: File = project.rootProject.file("local.properties")
+val localProperties = loadProperties(localPropsFile.absolutePath)
+
+val mUsername: String? by localProperties
+val mPassword: String? by localProperties
 
 group = artifactGroup
 version = artifactVersion
@@ -22,11 +31,17 @@ repositories {
     maven(url = "https://dl.google.com/dl/android/maven2")
     jcenter()
     mavenCentral()
-    maven(url = "https://dl.bintray.com/darkosinc/MVU")
+
+    maven(url = "https://darkos.jfrog.io/artifactory/mvu/") {
+        credentials {
+            username = mUsername
+            password = mPassword
+        }
+    }
 }
 
 android {
-    val sdkMin = 23
+    val sdkMin = 26
     val sdkCompile = 30
 
     compileSdkVersion(sdkCompile)
@@ -59,7 +74,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2")
-                implementation("com.darkosinc.MVU:core:0.1.0")
+                implementation("com.darkos.mvu:core:1.0.0-rc1")
             }
         }
         val androidMain by getting
@@ -69,55 +84,69 @@ kotlin {
     }
 }
 
-val root = project
-allprojects {
-    group = root.group
-    version = root.version
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlin.RequiresOptIn"
 }
 
-val localPropsFile: File = project.rootProject.file("local.properties")
-val localProperties = loadProperties(localPropsFile.absolutePath)
+artifactory {
+    val baseUrl = "https://darkos.jfrog.io/artifactory"
 
-allprojects {
-    apply(plugin = "maven-publish")
-    publishing {
-        val vcs = "https://github.com/Darkos-den/mvu-program"
+    setContextUrl(baseUrl)
 
-        publications.filterIsInstance<MavenPublication>().forEach { publication ->
-            publication.pom {
-                name.set(artifactName)
-                description.set(project.description)
+    publish(closureOf<org.jfrog.gradle.plugin.artifactory.dsl.PublisherConfig> {
+        setContextUrl(baseUrl)
+
+        repository(closureOf<org.jfrog.gradle.plugin.artifactory.dsl.DoubleDelegateWrapper> {
+            invokeMethod("setRepoKey", repoName)
+            invokeMethod("setUsername", mUsername)
+            invokeMethod("setPassword", mPassword)
+        })
+    })
+
+    resolve(closureOf<org.jfrog.gradle.plugin.artifactory.dsl.ResolverConfig> {
+        repository(closureOf<org.jfrog.gradle.plugin.artifactory.dsl.DoubleDelegateWrapper> {
+            invokeMethod("setRepoKey", "mvu")
+            invokeMethod("setUsername", mUsername)
+            invokeMethod("setPassword", mPassword)
+            invokeMethod("setMaven", true)
+        })
+    })
+}
+
+publishing {
+    val vcs = "https://darkos.jfrog.io/artifactory/$repoName/"
+
+    publications.filterIsInstance<MavenPublication>().forEach { publication ->
+        println(publication.name)
+
+        publication.pom {
+            name.set(artifactName)
+            description.set(project.description)
+            url.set(vcs)
+
+            licenses {
+                license {
+                    name.set("The Apache Software License, Version 2.0")
+                    url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                    distribution.set("repo")
+                }
+            }
+            scm {
                 url.set(vcs)
-
-                licenses {
-                    license {
-                        name.set("The Apache Software License, Version 2.0")
-                        url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
-                        distribution.set("repo")
-                    }
-                }
-                scm {
-                    url.set(vcs)
-                    tag.set(project.version.toString())
-                }
+                tag.set(project.version.toString())
             }
         }
+    }
 
-        val bintrayUser: String? by localProperties
-        val bintrayApiKey: String? by localProperties
-
-        if (bintrayUser != null && bintrayApiKey != null) {
-            repositories {
-                maven {
-                    name = "bintray"
-                    url =
-                        uri("https://api.bintray.com/maven/darkosinc/$repository/$artifactName/;publish=1;override=1")
-                    credentials {
-                        username = bintrayUser
-                        password = bintrayApiKey
-                    }
-                }
+    repositories {
+        maven {
+            name = "artifactory"
+            url =
+                uri("https://darkos.jfrog.io/artifactory/$repoName/")
+            credentials {
+                username = mUsername
+                password = mPassword
             }
-        } else throw IllegalStateException("bintray data not found")
+        }
     }
 }

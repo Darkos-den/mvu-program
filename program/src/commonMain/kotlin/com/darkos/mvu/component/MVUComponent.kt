@@ -8,7 +8,7 @@ import com.darkos.mvu.model.MVUState
 import com.darkos.mvu.model.Message
 import kotlinx.coroutines.InternalCoroutinesApi
 
-@InternalCoroutinesApi
+@OptIn(InternalCoroutinesApi::class)
 abstract class MVUComponent<T : MVUState>(
     private val effectHandler: EffectHandler,
     private val reducer: Reducer<T>

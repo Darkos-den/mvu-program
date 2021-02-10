@@ -8,4 +8,5 @@ interface ProgramComponent<T : MVUState> {
     fun clearStateListener()
     fun start()
     fun clear()
+    fun restore(state: T)
 }
