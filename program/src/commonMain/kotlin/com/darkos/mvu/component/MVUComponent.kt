@@ -6,6 +6,7 @@ import com.darkos.mvu.Program
 import com.darkos.mvu.Reducer
 import com.darkos.mvu.model.MVUState
 import com.darkos.mvu.model.Message
+import com.darkos.mvu.model.RestoreState
 import kotlinx.coroutines.InternalCoroutinesApi
 
 @OptIn(InternalCoroutinesApi::class)
@@ -36,6 +37,10 @@ abstract class MVUComponent<T : MVUState>(
             isStarted = true
             program.start()
         }
+    }
+
+    override fun restore(state: T) {
+        accept(RestoreState(state))
     }
 
     override fun applyStateListener(block: (T) -> Unit) {
